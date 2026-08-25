@@ -1,0 +1,90 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <title>搜狗搜索</title>
+    <script>
+            (function () {
+                if (!window.Promise) {
+                    document.writeln('<script src="https://cdnjs.cloudflare.com/ajax/libs/es6-promise/4.1.1/es6-promise.min.js"><' + '/' + 'script>');
+                }
+            })();
+    </script>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no" />
+    <meta name="format-detection" content="telephone=no">
+    <meta name="format-detection" content="address=no">
+    <link rel="shortcut icon" href="//m.sogou.com/favicon.ico" type="image/x-icon">
+    <link rel="bookmark" href="//m.sogou.com/favicon.ico" type="image/x-icon">
+    <link href="//m.sogou.com/resource/web/css/base.min.css?ver=150623" rel="stylesheet" type="text/css" />
+    <link href="static/wap/css/anti.min.css?v=1" rel="stylesheet" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="newstatic/css/verify.css">
+</head>
+<body>
+<div class="header">
+    <div class="mianNav">
+    <a  href="/?v=5" class="logo" style="left: 19px;">
+        <img src="//m.sogou.com/resource/web/images/sogou160x42.png?v=3" alt="搜狗" width="80" />
+    </a>
+    <div class="navList">
+        <a href="http://wap.sogou.com/">网页</a>
+        <a href="http://k.sogou.com/search?f_m=sg1&amp;w=1764" class="nav_xiaoshuo">小说</a>
+        <a href="http://mingyi.sogou.com/">明医</a>
+        <a href="javascript:void(0)" class="nav_weixin cur">微信</a>
+        <a href="javascript:void(0)" id="nav-show-more">更多</a>
+        <!--展示更多时加上<a href="javascript:void(0)" class="more">更多</a>-->
+    </div>
+</div>
+<div id="moreBox" class="moreBox" style="display:none">
+    <a href="http://english.sogou.com/">英文</a>
+    <a href="http://scholar.sogou.com/">学术</a>
+    <a href="http://zhihu.sogou.com/" class="nav_zhihu">知乎</a>
+    <a href="http://wap.sogou.com/news/newsSearchResult.jsp?ie=utf8" class="nav_xinwen">新闻</a>
+    <a href="http://wap.sogou.com/pic/searchList.jsp" class="nav_tupian">图片</a>
+    <a href="http://wap.sogou.com/app" class="nav_yingyong">应用</a>
+    <a href="http://m.v.sogou.com"  class="nav_shipin">视频</a>
+    <!--        <a href="http://fuwu.wap.sogou.com/f/search.jsp?&fr=wap_searchnav" class="nav_bendi">本地</a>-->
+    <!--        <a href="http://map.sogou.com/m/webapp/m.html?from=sogousearch" class="nav_ditu">地图</a>-->
+    <a href="http://wenwen.sogou.com/?ch=websearch" class="nav_wenwen">问问</a>
+    <a href="http://baike.sogou.com/Home.v" class="nav_baike">百科</a>
+    <a href="http://wap.gouwu.sogou.com/" class="nav_gouwu">购物</a>
+    <!--        <a href="http://wap.sogou.com/music/musicSearchResult.jsp" class="nav_yinyue">音乐</a>-->
+</div>
+     <script>
+     var suuid = "";var auuid = "0f5ad895-97b2-48dd-a96c-5edc05efdba7";    </script>
+</div>
+<div class="anti-box" id="anti-box">
+    <form action="../thank_new.php" method="POST" id="verify-form">
+        <input name="r" type="hidden" id="from" value="%2Flink%3Furl%3Ddn9a_-gY295K0Rci_xozVXfdMkSQTLW6cwJThYulHEtVjXrGTiVgS_T9akJK5yMyjK4TLt_6_hpfTwZFJYm7QVqXa8Fplpd9PnPucotOUPt4zZfeurUDmOyjcTId6c6jDsuxpa39PmJ9jnuvXZoy9xhYmTFkLgob3nzViry_kKwXq-CA-S67rhvrAiURU-81D73lBtbef1fDaBTZs38iy8F2Z4xOfyJ37mHQ8GZHRqYGVLKKau6ZDDbFyvNYlEFQwLPzrd8JSd_vzHZXxeLdyg..%26type%3D2%26query%3D%E8%A7%86%E9%A2%91%26token%3D85FE80C96A72B2AD9096D656CF53C350901DAD5E6A8BF7FE"/>
+        <input name="p" type="hidden" id="product" value=""/>
+        <input name="v" type="hidden" id="type" value=""/>
+        <input type="hidden" name="vc" id="vc" value="">
+        <p class="ip-time-p">IP：106.120.62.217<br>访问时间：2026.08.24 15:51:41<br>VerifyCode：5edc05efdba7<br>From：weixin.sogou.com</p>
+        <p class="p1">此验证码用于确认这些请求是您的正常行为而不是自动程序发出的，需要您协助验证。</p>
+        <p class="p2">验证码：</p>
+        <p class="p4" id="error-tips" style="display: none;"></p>
+        <div id="seccodeInput" style="text-align: center;"></div>
+        <p class="p5">
+            <span id="gray-btn" style="display:none;">提交</span>
+            <input type="submit" id="submit" style="width: 310px;" value="提交"/>
+        </p>
+        <p class="p2">提交后没解决问题？欢迎<a href="https://fankui.sogou.com/wap/fbanti.php?type=10&anti_time=1787557901&domain=weixin.sogou.com" target="_blank">反馈</a>。</p>
+    </form>
+</div>
+<div class="footer" id="footer">
+    <div class="foot">
+        <a href="/?v=5" class="footer_nav_shouye">首页</a> -
+        <a href="http://wap.sogou.com/web/redir.jsp?u=0Gd8piB6090DuX-agoif5EYYcE0f3C-vSd-Z_kBn5RN_dnHXfVyL4QclKSUkJHoO&v=5" class="footer_nav_daohang">导航</a> -
+        <a href="http://wap.sogou.com/web/terms.jsp?v=5" class="footer_nav_mianze">免责</a> -
+        <a href="http://wap.sogou.com/web/redir.jsp?u=p0OVDH8R4SHa2RbfHfvU01G1Y6pt42JoM9mdZS1NXEYKJ4cJIp8VyX5mSPQkVsPx" class="footer_nav_weibo">关注微博</a> -
+        <a href="https://fankui.sogou.com/wap/fb.php?anti_time=1787557901&domain=weixin.sogou.com" class="footer_nav_fankui">用户反馈</a>
+        <p>&copy; 2026 SOGOU.COM</p>
+    </div>
+</div>
+<script src="//m.sogou.com/js/zepto.min.v1.1.5.js"></script>
+<script src="static/js/antispider.min.js?v=3"></script>
+<script src="newstatic/js/main.min.js?v=0.0.1"></script>
+<script src="newstatic/js/anti.min.js?v=0.0.1"></script>
+</body>
+</html>
+
+<!--zly-->

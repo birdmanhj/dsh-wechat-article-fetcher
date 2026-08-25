@@ -1,0 +1,8 @@
+# dsh-wechat-article-fetcher bundle patch — one host row registering the wechat_article_fetcher tool.
+#
+# The row loads this package's main export (a cordis plugin) into the host
+# composition. It consumes the host `shell` and `tools` services and publishes
+# nothing, so it needs no config and no isolate realm.
+- insert:
+    - id: wechat-article-fetcher
+      name: 'dsh-wechat-article-fetcher'
