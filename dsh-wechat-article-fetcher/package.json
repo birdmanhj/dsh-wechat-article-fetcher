@@ -1,7 +1,7 @@
 {
   "name": "dsh-wechat-article-fetcher",
   "description": "DeepSeek Harness (DSH) plugin: complete WeChat Official Account article downloader — wechat_article_fetch tool plus a zero-dependency anti-bot fetcher CLI (title/time/author/content with text-images-videos-links, read/like/wow stats and comments with a login cookie, markdown/html/image export)",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "license": "MIT",
   "type": "module",
   "main": "lib/index.js",
@@ -35,5 +35,13 @@
     "bundle": {
       "patch": "./cordis.patch.yml"
     }
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/birdmanhj/dsh-wechat-article-fetcher.git"
+  },
+  "bugs": {
+    "url": "https://github.com/birdmanhj/dsh-wechat-article-fetcher/issues"
+  },
+  "homepage": "https://github.com/birdmanhj/dsh-wechat-article-fetcher#readme"
 }
