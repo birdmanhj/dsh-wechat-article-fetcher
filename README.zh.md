@@ -78,3 +78,12 @@ stdout 输出完整 JSON；保存模式落盘 `article.md` / `article.html` / `m
 市场无现成完整下载器：`dsh-wechat-mp`（Markdown 排版）、`dsh-wechat-mp-studio`（内容生产）、
 `dsh-deepread`（阅读分析）均非完整下载器；社区 `wechat-article-fetcher` Skill（Python）
 缺点赞/评论/视频。故自研，其反爬思路（移动端 UA、data-src、短链接优先）已借鉴。
+
+## 组合角色（五插件组合定案 2026-08-28）
+
+本插件在组合中只负责**抓取**：URL → 全文/图片/元数据归档（article.md/html/meta.json）。
+不搜索（DSH-wechat-article-searcher 管）、不评分（DSH-wechat-article-scorer 管）、
+不入库决策（DSH-wechat-articles 管）、不推送（DSH-im-wechat 管）、
+不编排（DSH-wechat-article-pipeline 管）。
+
+组合架构总文档：`DSH-wechat-article-pipeline/docs/plugin-composition.md`。
