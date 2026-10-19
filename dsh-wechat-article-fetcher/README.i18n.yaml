@@ -1,4 +1,4 @@
 # Bilingual-pair consistency record (see docs/i18n/README.md convention):
 # git blob hash of each side as of the last confirmed-consistent state.
-README.md: 1d801c6b3be4750aede34166b5c2c8aaed7210df
-README.zh.md: b90945ee11e47774d366532c26653fc6413f4fed
+README.md: 6fb07bd8baf835b94f74c128a5582b236346e465
+README.zh.md: 3c5f74e90a95b69089a1650d2ef311b424d16632

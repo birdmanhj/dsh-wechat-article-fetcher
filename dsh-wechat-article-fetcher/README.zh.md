@@ -31,6 +31,21 @@
 登录 cookie 必须是**文章页登录态**（`wxuin` + `key` + `pass_ticket`）；公众号后台 cookie
 （`slave_sid` / `data_ticket`）对这两个接口无效（已实测验证）。
 
+## 微信视频号支持
+
+`https://weixin.qq.com/sph/xxxx` 链接自动识别，经视频号接口
+（`finder-preview/api/feed/get_feed_info`）解析：
+
+| 字段 | 匿名访问 | 提供登录 cookie |
+|---|---|---|
+| 标题 / 描述 / 封面图 | ✅ | ✅ |
+| 作者（昵称、头像、签名） | ✅ | ✅ |
+| 点赞 / 收藏 / 转发 / 评论数（含"万"格式化） | ✅ | ✅ |
+| 发布时间 / 位置 / export id | ✅ | ✅ |
+| 视频流地址（h264/h265 mp4） | ❌ `此内容暂时无法播放` | ✅ |
+
+文件保存为**按日期目录**：`<out_dir>/视频号/<YYYY-MM-DD>_<标题>/`。
+
 ## 安装
 
 ```sh

@@ -112,7 +112,7 @@ function normalizeUrl(u) {
 
 function safeFilename(s, maxLen) {
   const name = String(s || 'untitled')
-    .replace(/[\\/:*?"<>|\r\n\t]+/g, '_')
+    .replace(/[\\/:*?"<>|\r\n\t#]+/g, '_')
     .replace(/\s+/g, ' ')
     .trim()
     .slice(0, maxLen || 80) || 'untitled';
@@ -412,6 +412,243 @@ function guessFormat(url) {
   if (u.indexOf('.svg') >= 0) return 'svg';
   if (u.indexOf('.bmp') >= 0) return 'bmp';
   return 'jpeg';
+}
+
+// ---------------------------------------------------------------- WeChat Channels (视频号)
+
+function isChannelsUrl(url) {
+  return /weixin\.qq\.com\/sph\//.test(url) ||
+    /channels\.weixin\.qq\.com/.test(url) ||
+    /\/sph\//.test(url);
+}
+
+function channelsIdFromUrl(url) {
+  let m = url.match(/sph\/([A-Za-z0-9_-]+)/);
+  if (m) return m[1];
+  m = url.match(/[?&]id=([A-Za-z0-9_-]+)/);
+  if (m) return m[1];
+  m = url.match(/exportId=([A-Za-z0-9_-]+)/);
+  if (m) return m[1];
+  return '';
+}
+
+function pickFirst(obj, keys, dflt) {
+  if (!obj || typeof obj !== 'object') return dflt;
+  for (const k of keys) {
+    if (obj[k] !== undefined && obj[k] !== null && obj[k] !== '') return obj[k];
+  }
+  return dflt;
+}
+
+// Parse WeChat formatted counts like '1369', '1.4万', '2.3亿' to numbers.
+function parseCountFmt(v) {
+  if (v === undefined || v === null) return 0;
+  const s = String(v).trim();
+  const m = s.match(/^([0-9.]+)(万|亿)?$/);
+  if (!m) return 0;
+  let n = parseFloat(m[1]);
+  if (m[2] === '万') n *= 10000;
+  if (m[2] === '亿') n *= 100000000;
+  return Math.round(n);
+}
+
+// Fetch one WeChat Channels (视频号) feed by its sph link.
+async function fetchChannelsFeed(url, opts) {
+  const out = {
+    ok: false,
+    type: 'channels',
+    url: url,
+    final_url: '',
+    fetched_at: new Date().toISOString(),
+    sph_id: '',
+    feed: {},
+    author: {},
+    files: {},
+    warnings: [],
+    error: '',
+  };
+  const id = channelsIdFromUrl(url);
+  if (!id) {
+    out.error = 'invalid_channels_url';
+    out.warnings.push('unable to extract sph id from URL: ' + url);
+    return out;
+  }
+  out.sph_id = id;
+  const api = 'https://channels.weixin.qq.com/finder-preview/api/feed/get_feed_info';
+  const headers = {
+    'Content-Type': 'application/json',
+    'User-Agent': nextUa(),
+    'Accept': 'application/json, text/plain, */*',
+    'Referer': 'https://channels.weixin.qq.com/finder-preview/pages/sph?id=' + id,
+    'Origin': 'https://channels.weixin.qq.com',
+  };
+  if (opts.cookie) headers['Cookie'] = opts.cookie;
+  let data = null;
+  let status = 0;
+  try {
+    const resp = await fetch(api, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ baseReq: { generalToken: '' }, shortUri: id }),
+      signal: AbortSignal.timeout(20000),
+    });
+    status = resp.status;
+    out.final_url = resp.url;
+    data = await resp.json().catch(() => null);
+  } catch (e) {
+    out.error = 'channels_fetch_failed: ' + (e && e.message ? e.message : String(e));
+    return out;
+  }
+  if (!data) {
+    out.error = 'channels_api_no_json (HTTP ' + status + ')';
+    return out;
+  }
+  if (status === 401 || data.errCode === -1 || (data.errMsg && /permission|verification/i.test(data.errMsg))) {
+    out.error = 'sph_requires_login';
+    out.warnings.push('WeChat Channels feed API rejects anonymous access ("permission verification failed"). ' +
+      'Provide a WeChat login cookie (wxuin + key + pass_ticket) via --cookie to unlock.');
+    return out;
+  }
+  const d = data.data || data;
+  const fi = d.feedInfo || {};
+  const ai = d.authorInfo || {};
+  const scene = d.sceneInfo || {};
+
+  const exportId = pickFirst(scene, ['dynamicExportId', 'exportId'], '');
+  const coverUrl = pickFirst(fi, ['coverUrl'], '') ||
+    (Array.isArray(fi.picInfo) && fi.picInfo.length ? fi.picInfo[0].picUrl || '' : '');
+
+  const likeFmt = pickFirst(fi, ['likeCountFmt', 'likeCount', 'like_count'], '');
+  const favFmt = pickFirst(fi, ['favCountFmt', 'favCount', 'fav_count'], '');
+  const fwdFmt = pickFirst(fi, ['forwardCountFmt', 'forwardCount', 'forward_count'], '');
+  const cmtFmt = pickFirst(fi, ['commentCountFmt', 'commentCount', 'comment_count'], '');
+  const readFmt = pickFirst(fi, ['readCountFmt', 'readCount', 'read_count'], '');
+
+  out.feed = {
+    title: pickFirst(fi, ['description', 'title', 'objectDesc'], ''),
+    description: pickFirst(fi, ['description', 'title', 'objectDesc'], ''),
+    media_type: Number(pickFirst(fi, ['mediaType'], 0)) || 0,
+    video_url: '',
+    video_h264_url: '',
+    video_h265_url: '',
+    cover_url: coverUrl,
+    images: [],
+    duration_sec: 0,
+    width: 0,
+    height: 0,
+    like_count: parseCountFmt(likeFmt),
+    fav_count: parseCountFmt(favFmt),
+    forward_count: parseCountFmt(fwdFmt),
+    comment_count: parseCountFmt(cmtFmt),
+    read_count: parseCountFmt(readFmt),
+    like_count_fmt: String(likeFmt),
+    fav_count_fmt: String(favFmt),
+    forward_count_fmt: String(fwdFmt),
+    comment_count_fmt: String(cmtFmt),
+    read_count_fmt: String(readFmt),
+    create_time: Number(pickFirst(fi, ['createtime', 'createTime', 'create_time'], 0)) || 0,
+    create_time_display: fmtTime(pickFirst(fi, ['createtime', 'createTime', 'create_time'], 0)),
+    location: pickFirst(fi.jumpInfo || {}, ['wording', 'location'], ''),
+    export_id: exportId,
+  };
+  out.author = {
+    nickname: pickFirst(ai, ['nickname', 'nickName'], ''),
+    username: pickFirst(ai, ['exportUsername', 'finderUsername', 'username'], ''),
+    avatar_url: pickFirst(ai, ['authIconUrl', 'headImgUrl', 'avatar'], ''),
+    signature: pickFirst(ai, ['signature'], ''),
+  };
+
+  // Second step (best-effort): full feed via exportId unlocks the video URL.
+  // Anonymous access usually gets "此内容暂时无法播放" — the mp4 needs a login cookie.
+  if (exportId) {
+    try {
+      const resp2 = await fetch(api, {
+        method: 'POST',
+        headers: Object.assign({}, headers, { 'Referer': 'https://channels.weixin.qq.com/finder-preview/pages/feed?exportId=' + encodeURIComponent(exportId) }),
+        body: JSON.stringify({ baseReq: { generalToken: '' }, exportId: exportId }),
+        signal: AbortSignal.timeout(20000),
+      });
+      const d2 = await resp2.json().catch(() => null);
+      const fi2 = d2 && d2.data && d2.data.feedInfo;
+      if (fi2) {
+        const media2 = fi2.media || {};
+        const h264 = fi2.h264VideoInfo || {};
+        const h265 = fi2.h265VideoInfo || {};
+        const vu = pickFirst(media2, ['videoUrl', 'url'], '') ||
+          pickFirst(h264, ['videoUrl', 'url'], '') ||
+          pickFirst(h265, ['videoUrl', 'url'], '');
+        if (vu) {
+          out.feed.video_url = vu;
+          out.feed.video_h264_url = pickFirst(h264, ['videoUrl', 'url'], '');
+          out.feed.video_h265_url = pickFirst(h265, ['videoUrl', 'url'], '');
+          out.feed.duration_sec = Number(pickFirst(media2, ['duration', 'videoPlayLen'], 0)) || 0;
+          out.feed.width = Number(pickFirst(media2, ['width'], 0)) || 0;
+          out.feed.height = Number(pickFirst(media2, ['height'], 0)) || 0;
+          const pic2 = Array.isArray(fi2.picInfo) ? fi2.picInfo : [];
+          out.feed.images = pic2.map((p) => ({ url: p.picUrl || '', width: p.width || 0, height: p.height || 0 }));
+        } else {
+          out.warnings.push('video stream url not returned (anonymous access); provide a login cookie to unlock the mp4 url');
+        }
+      }
+    } catch (e) {
+      out.warnings.push('exportId feed lookup failed: ' + (e && e.message ? e.message : String(e)));
+    }
+  }
+
+  if (!out.feed.title && !out.feed.cover_url) {
+    out.warnings.push('feed data returned but title/cover fields are empty; response shape may have changed');
+  }
+  out.ok = true;
+  return out;
+}
+
+// Save channels result under <out>/视频号/<YYYY-MM-DD>_<title-or-id>/
+async function saveChannelsFiles(info, opts) {
+  const datePart = info.fetched_at.slice(0, 10);
+  const label = info.feed.title
+    ? safeFilename(info.feed.title, 60)
+    : info.sph_id;
+  const base = path.join(opts.outDir, '视频号', datePart + '_' + label);
+  const imagesDir = path.join(base, 'images');
+  fs.mkdirSync(imagesDir, { recursive: true });
+
+  const urls = [];
+  if (info.feed.cover_url) urls.push(info.feed.cover_url);
+  for (const p of info.feed.images || []) {
+    if (p.url && urls.length < 5) urls.push(p.url);
+  }
+  let downloads = [];
+  if (opts.downloadImages && urls.length) {
+    const imgs = urls.map((u, i) => ({ url: u, format: guessFormat(u), width: '', height: '' }));
+    const raw = await downloadImages(imgs, imagesDir, opts);
+    downloads = raw.map((r) => ({ index: r.index, file: r.file ? 'images/' + r.file : null, url: r.url, bytes: r.bytes, error: r.error || '' }));
+  }
+
+  const metaCopy = JSON.parse(JSON.stringify(info));
+  fs.writeFileSync(path.join(base, 'meta.json'), JSON.stringify(metaCopy, null, 2), 'utf8');
+  const mdLines = [];
+  mdLines.push('# ' + (info.feed.title || info.sph_id));
+  mdLines.push('');
+  const meta = [];
+  if (info.author.nickname) meta.push('视频号: ' + info.author.nickname);
+  if (info.feed.create_time_display) meta.push('发布: ' + info.feed.create_time_display);
+  if (info.feed.like_count) meta.push('赞 ' + info.feed.like_count);
+  if (info.feed.comment_count) meta.push('评论 ' + info.feed.comment_count);
+  if (info.feed.forward_count) meta.push('转发 ' + info.feed.forward_count);
+  if (meta.length) { mdLines.push('> ' + meta.join('　|　')); mdLines.push(''); }
+  if (info.feed.description) { mdLines.push(info.feed.description); mdLines.push(''); }
+  if (info.feed.video_url) { mdLines.push('视频: ' + info.feed.video_url); mdLines.push(''); }
+  if (info.feed.cover_url) { mdLines.push('![' + (info.feed.title || 'cover') + '](' + (downloads[0] && downloads[0].file ? downloads[0].file : info.feed.cover_url) + ')'); mdLines.push(''); }
+  fs.writeFileSync(path.join(base, 'article.md'), mdLines.join('\n'), 'utf8');
+  info.files = {
+    dir: base,
+    markdown: path.join(base, 'article.md'),
+    meta: path.join(base, 'meta.json'),
+    images_dir: imagesDir,
+    images_downloaded: downloads.filter((r) => r.file).length,
+  };
+  info.image_downloads = downloads;
+  return info;
 }
 
 // ---------------------------------------------------------------- stats & comments (best-effort)
@@ -864,9 +1101,16 @@ async function main() {
     log('fetching ' + url);
     let info;
     try {
-      info = await fetchArticle(url, opts);
-      if (info.ok && !opts.jsonOnly) {
-        info = await saveFiles(info, opts);
+      if (isChannelsUrl(url)) {
+        info = await fetchChannelsFeed(url, opts);
+        if (info.ok && !opts.jsonOnly) {
+          info = await saveChannelsFiles(info, opts);
+        }
+      } else {
+        info = await fetchArticle(url, opts);
+        if (info.ok && !opts.jsonOnly) {
+          info = await saveFiles(info, opts);
+        }
       }
     } catch (e) {
       info = {

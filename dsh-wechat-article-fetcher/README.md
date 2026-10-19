@@ -34,6 +34,21 @@ The ❌ rows are WeChat platform restrictions, not plugin limitations: the `geta
 state** (`wxuin` + `key` + `pass_ticket`); an mp-admin cookie (`slave_sid` / `data_ticket`) does
 not work for these endpoints (verified in practice).
 
+## WeChat Channels (视频号) support
+
+`https://weixin.qq.com/sph/xxxx` links are auto-detected and resolved via the Channels feed API
+(`finder-preview/api/feed/get_feed_info`):
+
+| Field | Anonymous | With login cookie |
+|---|---|---|
+| Title / description / cover image | ✅ | ✅ |
+| Author (nickname, avatar, signature) | ✅ | ✅ |
+| Like / fav / forward / comment counts (incl. `万` formatting) | ✅ | ✅ |
+| Publish time / location / export id | ✅ | ✅ |
+| Video stream URL (h264/h265 mp4) | ❌ `此内容暂时无法播放` | ✅ |
+
+Files are saved into **date-based folders**: `<out_dir>/视频号/<YYYY-MM-DD>_<标题>/`.
+
 ## Install
 
 ```sh

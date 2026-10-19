@@ -8,7 +8,9 @@ English | [中文](README.zh.md)
 
 Input a WeChat Official Account (公众号) article URL, get the complete article out: title, time,
 author, read/like/wow stats, content (text / image / video / link blocks), and comments — with
-anti-bot protection. Works as a DSH plugin and as a zero-dependency standalone CLI.
+anti-bot protection. WeChat Channels links (`weixin.qq.com/sph/xxxx`) are supported too: title,
+author, cover, like/fav/forward/comment counts, time, and location (video stream url needs a login
+cookie). Works as a DSH plugin and as a zero-dependency standalone CLI.
 
 > Package docs (install, tool parameters, CLI flags, anti-bot details):
 > [`dsh-wechat-article-fetcher/README.md`](dsh-wechat-article-fetcher/README.md)
@@ -61,6 +63,8 @@ stdout prints the full JSON; save mode writes `article.md` / `article.html` / `m
 | Image download, album & tags | ✅ | ✅ |
 | Read / like / wow counts | ❌ WeChat hides them | ✅ |
 | Comments (with replies) | ❌ `no session` | ✅ |
+| Channels: title/author/cover/counts/time/location | ✅ | ✅ |
+| Channels: video stream url (mp4) | ❌ login needed | ✅ |
 
 - The ❌ rows are WeChat platform restrictions (`getappmsgext` / `appmsg_comment` reject
   anonymous access). Unlock them with the `cookie` parameter — it must be the article-page

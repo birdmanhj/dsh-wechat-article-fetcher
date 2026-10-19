@@ -6,7 +6,8 @@
 [![GitHub](https://img.shields.io/badge/GitHub-birdmanhj%2Fdsh--wechat--article--fetcher-181717?logo=github)](https://github.com/birdmanhj/dsh-wechat-article-fetcher)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-输入微信公众号文章 URL，输出完整信息：标题、时间、作者、点赞/在看/阅读、内容（文字/图片/视频/链接）、评论。
+输入微信公众号文章 URL，输出完整信息：标题、时间、作者、点赞/在看/阅读、内容（文字/图片/视频/链接）、评论；
+支持微信视频号链接（`weixin.qq.com/sph/xxxx`）：标题/作者/封面/点赞/收藏/转发/评论/时间/位置（视频流地址需登录态）。
 带反爬能力，可作为 DSH 插件安装，也可作为零依赖 CLI 独立使用。
 
 > 包文档（安装、工具参数、CLI 参数、反爬细节）：[`dsh-wechat-article-fetcher/README.md`](dsh-wechat-article-fetcher/README.md)
@@ -57,6 +58,8 @@ stdout 输出完整 JSON；保存模式落盘 `article.md` / `article.html` / `m
 | 图片下载、专辑/标签 | ✅ | ✅ |
 | 阅读数/点赞/在看 | ❌ 微信不暴露 | ✅ |
 | 评论（含回复） | ❌ `no session` | ✅ |
+| 视频号：标题/作者/封面/计数/时间/位置 | ✅ | ✅ |
+| 视频号：视频流地址（mp4） | ❌ 需登录态 | ✅ |
 
 - ❌ 是微信平台限制（`getappmsgext`/`appmsg_comment` 匿名被拒），传 `cookie` 参数解锁
   （需文章页登录态 cookie：含 `wxuin=` 与 `key=`；公众号后台 cookie 对这两个接口无效，已实测）。

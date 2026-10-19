@@ -25,9 +25,32 @@ function render(args, value) {
   if (!value || value.ok === false) {
     const err = (value && value.error) || 'unknown error';
     const warns = value && value.warnings && value.warnings.length ? '\n警告: ' + value.warnings.join('; ') : '';
-    const lines = ['❌ 微信文章抓取失败: ' + err + warns];
+    const lines = ['❌ 微信抓取失败: ' + err + warns];
     if (value && value.stderr) lines.push('stderr: ' + value.stderr.slice(0, 2000));
     return [{ type: 'text', text: lines.join('\n') }];
+  }
+  if (value.type === 'channels') {
+    const L = [];
+    const f = value.feed || {};
+    L.push('✅ 已获取微信视频号: ' + (f.title || value.sph_id || '(无标题)'));
+    const au = value.author || {};
+    L.push('作者: ' + (au.nickname || '(未知)') + (au.signature ? ' | 签名: ' + au.signature : ''));
+    if (f.create_time_display) L.push('发布时间: ' + f.create_time_display);
+    if (f.location) L.push('位置: ' + f.location);
+    const bits = [];
+    if (f.like_count) bits.push('赞 ' + f.like_count);
+    if (f.fav_count) bits.push('收藏 ' + f.fav_count);
+    if (f.forward_count) bits.push('转发 ' + f.forward_count);
+    if (f.comment_count) bits.push('评论 ' + f.comment_count);
+    if (bits.length) L.push('数据: ' + bits.join(' / '));
+    if (f.video_url) L.push('视频: ' + f.video_url);
+    else L.push('视频流: 需登录 cookie（匿名仅返回元信息）');
+    if (f.cover_url) L.push('封面: ' + f.cover_url);
+    if (f.description && f.description !== f.title) L.push('描述: ' + f.description.slice(0, 500));
+    if (value.files && value.files.markdown) L.push('已保存: ' + value.files.markdown);
+    const warns = value.warnings || [];
+    if (warns.length) L.push('⚠️ 警告: ' + warns.join('; '));
+    return [{ type: 'text', text: L.join('\n') }];
   }
   const L = [];
   L.push('✅ 已获取微信公众号文章: ' + (value.title || '(无标题)'));
@@ -84,11 +107,13 @@ function render(args, value) {
 function createTool(ctx) {
   return {
     name: 'wechat_article_fetcher',
-    description: 'Fetch a complete WeChat Official Account (mp.weixin.qq.com) article from its URL. ' +
-      'Returns title, author, account nickname, publish time, digest, cover, full content as structured blocks ' +
+    description: 'Fetch complete WeChat content from a URL. For Official Account articles (mp.weixin.qq.com/s/xxxx): ' +
+      'title, author, account nickname, publish time, digest, cover, full content as structured blocks ' +
       '(text / image / video / link), image list, video list, link list, read/like/wow stats (login cookie needed), ' +
-      'and comments (login cookie needed). Anti-bot: UA pool rotation, exponential backoff retries, verification-page detection. ' +
-      'Optionally downloads images and saves markdown/html/meta files to disk.',
+      'and comments (login cookie needed). For WeChat Channels videos (weixin.qq.com/sph/xxxx): title, author, ' +
+      'cover, like/fav/forward/comment counts, publish time, location, and the mp4 url (login cookie needed for the ' +
+      'video stream; metadata is available anonymously). Anti-bot: UA pool rotation, exponential backoff retries, ' +
+      'verification-page detection. Saves files into date-based folders (视频号/<日期>_<标题>/ for channels).',
     timeoutMs: 240000,
     parameters: {
       type: 'object',
@@ -96,7 +121,7 @@ function createTool(ctx) {
       properties: {
         url: {
           type: 'string',
-          description: 'WeChat article URL, short link (https://mp.weixin.qq.com/s/xxxx) preferred.',
+          description: 'WeChat article URL (https://mp.weixin.qq.com/s/xxxx) or WeChat Channels video link (https://weixin.qq.com/sph/xxxx).',
         },
         cookie: {
           type: 'string',
